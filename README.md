@@ -77,6 +77,7 @@ python main.py -m <receiver_email> [-u <kibana_url>] [-i <rule_id>] [-s <service
 | `-i`, `--id`  | Rule ID to query data from  | `''` |
 | `-s`, `--service`  | Rule ID for service query  | `''` |
 | `-m`, `--mail`  | Receiver's email address  | **Required** |
+| `-ns`, `--notifyslack`  | Notify Slack Channel  | `''` |
 | `-t`, `--time`  | Sleep interval between checks (seconds)  | `300` |
 | `-f`, `--file`  | Log file to save output  | `anomaly.log` |
 | `-v`, `--verbose`  | Enable verbose mode  | `True` |
