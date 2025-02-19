@@ -77,7 +77,7 @@ class Latency:
                     if tcp_latency > self.LATENCY_THRESHOLD or tls_latency > self.LATENCY_THRESHOLD or http_latency > self.LATENCY_THRESHOLD:
                         affected_hosts.append(latency_dict)
 
-                    self.log_message(f"URL: {url} | TCP Latency: {tcp_latency} ms | TLS Handshake: {tls_latency} ms | HTTP Latency: {http_latency} ms")
+                    self.log_message(f"{url} | TCP Latency: {tcp_latency} ms | TLS Handshake: {tls_latency} ms | HTTP Latency: {http_latency} ms")
                 
                 if len(affected_hosts) > 0:
                     subject = f"High Latency Detected on {len(affected_hosts)} "              
@@ -87,9 +87,9 @@ class Latency:
                             tcp_latency = host['tcp']
                             tls_latency = host['tls']
                             http_latency = host['http']
-                            body = f"CPU usage on {url}: exceeded threshold:  Tcp: {tcp_latency} ms, Tls: {tls_latency} ms, Http: {http_latency} ms {tcp_latency}%"
+                            body = f"{url}: exceeded threshold - Tcp: {tcp_latency} ms - Tls: {tls_latency} ms - Http: {http_latency} ms {tcp_latency}%"
                             f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Host: {url} | TCP Latency: {tcp_latency} ms | TLS Handshake: {tls_latency} ms | HTTP Latency: {http_latency} ms \n")
-                    self.send_mail(subject=subject, body=body, file=self.filename)
+                    self.send_mail(subject=subject, body=body, attachment=self.filename)
                     self.log_message(f"\t Affected : {len(affected_hosts)}")
                 return data
             else:
