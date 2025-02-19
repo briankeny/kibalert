@@ -25,12 +25,17 @@ This script monitors anomalies in system metrics such as CPU usage and service l
 
    ```bash
    git clone https://github.com/briankeny/kibalert.git
-   cd kibalert
+  
    ```
    or SSH
 
    ```bash
       git clone git@github.com:briankeny/kibalert.git
+   ```
+   Then
+
+   ```bash
+   cd kibalert
    ```
 
 2. Create a Virtual Environment and Install dependencies:
