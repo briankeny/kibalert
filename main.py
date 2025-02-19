@@ -7,6 +7,7 @@ from rules import  Rule
 from mail import SendMail
 from host import Host
 from latency import Latency
+from slack import Slack
 
 def error_handler(errmsg):
     """Handle errors and exit the script gracefully."""
@@ -24,6 +25,7 @@ def argument_handler():
     parser.add_argument("-t", "--time", type=int, default=300, help='Time to sleep')
     parser.add_argument("-s", "--service", type=str, default='', help='Rule ID for service to query data from')
     parser.add_argument("-m", "--mail", type=str, required=True, help="Receiver's email address")
+    parser.add_argument("-ns", "--notifyslack", type=str, required=False,default= os.getenv('SLACK_CHANNEL'), help="Send notification to slack by attaching channel name")
     parser.add_argument("-f", "--file", type=str, default='anomaly.log', help='Log file to save output')
     parser.add_argument("-v", "--verbose", default=True,action="store_true", help="Enable verbose mode")
 
@@ -32,7 +34,7 @@ def argument_handler():
 
 
 
-def main(url, rule_id, receiver, verbose, save, savefile,sid,interval):
+def main(url, rule_id, receiver, verbose, save, savefile,sid,interval,slack_channel):
     """Monitor anomalies and send notifications."""
     
     def log_message(message=None, filename=savefile):
@@ -52,8 +54,11 @@ def main(url, rule_id, receiver, verbose, save, savefile,sid,interval):
     }
     while True:
         try:           
-            # Send mail
+            # Send mail notification
             send_mail = SendMail(receiver=receiver, log_message=log_message)
+
+            #Send notification via slack
+            slack = Slack (slack_channel,log_message=None)
 
             # Fetch from rule
             rule = Rule(service_id=sid,kibana_url=url,rule_id=rule_id,log_message=log_message,send_mail=send_mail.send_mail,headers=headers)        
@@ -95,6 +100,7 @@ if __name__ == "__main__":
     savefile = args.file
     save = bool(savefile)
     sid = args.service
+    slack_channel = args.notifyslack
     interval=int(args.time)
  
-    main(url, rule_id, receiver, verbose, save, savefile,sid,interval)
+    main(url, rule_id, receiver, verbose, save, savefile,sid,interval,slack_channel)

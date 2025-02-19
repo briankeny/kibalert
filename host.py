@@ -71,7 +71,7 @@ class Host:
                 
                 if len(affected_hosts) > 0:
                     subject = f"High CPU Usage Detected on [{len(affected_hosts)}] "
-                    body = f"CPU usage on {host_details}: exceeded threshold: {cpu_usage}%"
+                    body = f"CPU usage on {len(affected_hosts)} hosts, exceeded threshold: {cpu_usage}%. Check file attachment"
                    
                     # Create a file with the affected 
                     with open('affected_hosts.txt', 'w') as f:

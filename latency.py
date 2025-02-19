@@ -80,7 +80,8 @@ class Latency:
                     self.log_message(f"{url} | TCP Latency: {tcp_latency} ms | TLS Handshake: {tls_latency} ms | HTTP Latency: {http_latency} ms")
                 
                 if len(affected_hosts) > 0:
-                    subject = f"High Latency Detected on {len(affected_hosts)} "              
+                    subject = f"High Latency Detected on {len(affected_hosts)} Hosts"
+                    body = f"Latency on {len(affected_hosts)}: exceeded threshold: {self.LATENCY_THRESHOLD}% .Check file attachment"              
                     with open(self.filename, 'w') as f:
                         for host in affected_hosts:
                             url = host['url']
