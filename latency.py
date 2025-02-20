@@ -5,7 +5,7 @@ class Latency:
     def __init__(self,url,filename='latency.log',latency_threshold=2000,headers={}, log_message=None,send_mail=None,send_slack=None,slack_channel='',send_via_hook=None):
         # Kibana configuration
         self.KIBANA_URL = url
-        self.LATENCY_THRESHOLD= float(10)
+        self.LATENCY_THRESHOLD= float(latency_threshold)
         self.Headers = headers
         self.send_mail = send_mail
         self.log_message = log_message
@@ -92,10 +92,7 @@ class Latency:
                             message = f"""
     🔴 High Latency Alert On {host.get('url','')} ❌
 
-    Url : {host.get('url','')}
-
-    Timestamp : "{time.strftime('%Y-%m-%d %H:%M:%S')}"
-    
+    Timestamp : "{time.strftime('%Y-%m-%d %H:%M:%S')}"    
     Exceeded threshold {self.LATENCY_THRESHOLD} ms
     
     Tcp latency = {host.get('tcp','')} ms
