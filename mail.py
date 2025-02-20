@@ -20,6 +20,11 @@ class SendMail:
 
     def send_mail(self, subject, body='',attachment=None):
         """Send email notification via SMTP."""
+
+        if not self.EMAIL_RECEIVER:
+            # self.log_message("\t Email receiver is not configured.")
+            return
+
         self.log_message(f"Sending email notification to {self.EMAIL_RECEIVER}")
         msg = MIMEMultipart()
         msg["From"] = self.SMTP_USER
@@ -46,12 +51,14 @@ class SendMail:
             except Exception as e:
                 self.log_message(f"Failed to attach file: {e}")
                 pass
-        try:
-            with smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT) as server:
-                server.starttls()
-                server.login(self.SMTP_USER, self.SMTP_PASSWORD)
-                server.sendmail(self.SMTP_USER, self.EMAIL_RECEIVER, msg.as_string())
-            self.log_message(f"Email sent to {self.EMAIL_RECEIVER} successfully.")
-        except Exception as e:
-            self.log_message(f"Failed to send email: {e}")
-            pass
+            
+        if self.EMAIL_RECEIVER and self.EMAIL_RECEIVER is not None:
+            try:
+                with smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT) as server:
+                    server.starttls()
+                    server.login(self.SMTP_USER, self.SMTP_PASSWORD)
+                    server.sendmail(self.SMTP_USER, self.EMAIL_RECEIVER, msg.as_string())
+                self.log_message(f"Email sent to {self.EMAIL_RECEIVER} successfully.")
+            except Exception as e:
+                self.log_message(f"Failed to send email: {e}")
+                pass

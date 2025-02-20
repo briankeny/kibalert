@@ -1,12 +1,11 @@
 import os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from dotenv import load_dotenv
-
-load_dotenv()
+import requests
+import json 
 
 class Slack:
-    def __init__(self, channel, slack_token=os.getenv("SLACK_TOKEN"), log_message=None):
+    def __init__(self, channel=None, slack_token=None, log_message=None,webhook_url=None):
         """
         Initialize the Slack notification sender.
 
@@ -18,6 +17,7 @@ class Slack:
         self.SLACK_CHANNEL = channel
         self.log_message = log_message
         self.client = WebClient(token=self.SLACK_TOKEN)
+        self.WEBHOOK_URL = webhook_url
 
     def send_notification(self, message, file_path=None):
         """
@@ -27,6 +27,10 @@ class Slack:
         :param file_path: Optional path to a file to upload with the message.
         """
         try:
+            
+            if not self.SLACK_CHANNEL or self.SLACK_TOKEN:
+                return
+            
             # Send the message
             self.log_message(f"Sending Slack notification to {self.SLACK_CHANNEL}")
             response = self.client.chat_postMessage(
@@ -38,7 +42,7 @@ class Slack:
             # Attach a file if provided
             if file_path:
                 try:
-                    self.log_message(f"Attaching file: {file_path}")
+                    self.log_message(f"Attaching file to Slack notification: {file_path}")
                     file_response = self.client.files_upload(
                         channels=self.SLACK_CHANNEL,
                         file=file_path,
@@ -48,4 +52,34 @@ class Slack:
                 except SlackApiError as e:
                     self.log_message(f"Failed to upload file: {e.response['error']}")
         except SlackApiError as e:
-            self.log_message(f"Failed to send Slack notification: {e.response['error']}")
+            self.log_message(f"Failed to send Slack notification: {e.response['error']}")    
+            pass
+
+    def send_via_hook(self, message):
+        """
+        Send a notification to a Slack channel via webhook.
+
+        :param message: The message to send.
+        """
+        if not self.WEBHOOK_URL:
+            # self.log_message("\t Slack webhook URL is not configured.")
+            return
+
+        payload = {
+            "text": message
+        }
+
+        try:
+            self.log_message(f"Sending Slack notification via webhook to {self.WEBHOOK_URL}")
+            response = requests.post(
+                self.WEBHOOK_URL,
+                data=json.dumps(payload),
+                headers={"Content-Type": "application/json"}
+            )
+            if response.status_code == 200:
+                self.log_message("Slack message sent successfully.")
+            else:
+                self.log_message(f"Failed to send Slack notification: {response.status_code} - {response.text}")
+        except Exception as e:
+            self.log_message(f"Failed to send Slack notification: {e}")
+            pass
