@@ -134,4 +134,3 @@ Feel free to fork the repository, make enhancements, and submit pull requests.
 - Send Slack notifications for detected anomalies
 - Customizable monitoring interval
 - Docker support for easy deployment
-

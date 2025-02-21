@@ -88,11 +88,12 @@ class Latency:
                     body = f"Latency on {len(affected_hosts)}: exceeded threshold: {self.LATENCY_THRESHOLD}% .Check file attachment"              
                 
                     with open(self.filename, 'a') as f:
+                        d = affected_hosts[:5]
                         for host in affected_hosts:
                             message = f"""
     🔴 High Latency Alert On {host.get('url','')} ❌
 
-    Timestamp : "{time.strftime('%Y-%m-%d %H:%M:%S')}"    
+    Timestamp : {time.strftime('%Y-%m-%d %H:%M:%S')}   
     Exceeded threshold {self.LATENCY_THRESHOLD} ms
     
     Tcp latency = {host.get('tcp','')} ms

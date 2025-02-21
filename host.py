@@ -89,7 +89,7 @@ class Host:
 
                     host_dict = {
                         'name': host_name,
-                        'timestamp':metadata.get('@timestamp',f'{time.strftime('%Y-%m-%d %H:%M:%S')}'),
+                        'timestamp':metadata.get('@timestamp',f"{time.strftime('%Y-%m-%d %H:%M:%S')}"),
                         'sys_cores': sys_cores,
                         'sys_cpu_usage':sys_cpu_usage,
                         'sys_user_usage':sys_user_usage,

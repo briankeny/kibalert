@@ -184,7 +184,7 @@ class Rule:
                     service_name = alert_source.get('service.name','')
                     service_environment = alert_source.get('service.environment','')
                     transaction_type = alert_source.get('transaction.type')
-                    timestamp = alert_source.get('@timestamp',f'{time.strftime('%Y-%m-%d %H:%M:%S')}')
+                    timestamp = alert_source.get('@timestamp',f"{time.strftime('%Y-%m-%d %H:%M:%S')}")
 
                     data = {
                         'service_name':service_name,
