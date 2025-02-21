@@ -1,18 +1,13 @@
 import requests
+from base import Base
 
-class ServiceMonitor:
-    def __init__(self, kibana_url='', headers={}, error_keywords=[], service_down_threshold=5, log_message=None, send_mail=None, send_via_hook=None, send_slack=None, slack_channel='', service_output_file='services.log'):
-        self.KIBANA_URL = kibana_url
-        self.Headers = headers
-        self.ERROR_KEYWORDS = error_keywords
-        self.SERVICE_DOWN_THRESHOLD = service_down_threshold
-        self.log_message = log_message
-        self.send_mail = send_mail
-        self.send_via_hook = send_via_hook
-        self.send_slack = send_slack
-        self.slack_channel = slack_channel
-        self.service_output_file = service_output_file
 
+class Monitor(Base):
+
+    def __init__(self, **kwargs):
+        # Call parent class's __init__ with all arguments
+        super().__init__(**kwargs)
+        
     def check_host_downtime(self):
         """Identify hosts that have stopped sending data."""
         self.log_message("Checking for Down Hosts...")
@@ -24,7 +19,7 @@ class ServiceMonitor:
                         {
                             "range": {
                                 "@timestamp": {
-                                    "gte": "now-5m",
+                                    "gte": f"now-{self.SLEEP_TIME}s",
                                     "lt": "now"
                                 }
                             }
@@ -32,12 +27,12 @@ class ServiceMonitor:
                     ]
                 }
             },
-            "size": 200,
+            "size": self.HITS_SIZE,
             "_source": ["host.name", "@timestamp"]
         }
 
         try:
-            response = requests.post(url, headers=self.Headers, json=query)
+            response = requests.post(url, headers=self.headers, json=query)
             if response.status_code == 200:
                 data = response.json()
                 down_hosts = [hit["_source"].get("host", {}).get("name", "unknown") for hit in data.get("hits", {}).get("hits", [])]
@@ -46,7 +41,7 @@ class ServiceMonitor:
                     self.log_message(f"Found {len(down_hosts)} hosts that may be down.")
                     alert_message = f"⚠️ The following hosts have stopped reporting data: {', '.join(down_hosts)}"
 
-                    if self.slack_channel:
+                    if self.SLACK_CHANNEL:
                         self.send_slack(message=alert_message)
                     else:
                         self.send_via_hook(alert_message)
@@ -74,7 +69,7 @@ class ServiceMonitor:
                         {
                             "range": {
                                 "@timestamp": {
-                                    "gte": "now-5m",
+                                    "gte": f"now-{self.SLEEP_TIME}m",
                                     "lt": "now"
                                 }
                             }
@@ -87,7 +82,7 @@ class ServiceMonitor:
                     ]
                 }
             },
-            "size": 100,
+            "size": self.HITS_SIZE,
             "_source": [
                 "monitor.name",  
                 "monitor.id",    
@@ -98,7 +93,7 @@ class ServiceMonitor:
         }
 
         try:
-            response = requests.post(url, headers=self.Headers, json=query)
+            response = requests.post(url, headers=self.headers, json=query)
             if response.status_code == 200:
                 data = response.json()
                 down_services = []
@@ -112,27 +107,26 @@ class ServiceMonitor:
                         "timestamp": service_info.get("@timestamp", "N/A"),
                         "location": service_info.get("observer.geo.name", "Unknown Location")
                     })
-
+    
                 if down_services:
                     self.log_message(f"⚠️ Found {len(down_services)} services that are DOWN.")
-                    d = down_services[:5]
-                    for service in d:
-                        alert_message = "\n".join([
-                        f"🔴 Service **{service['name']}** {service['url']} is DOWN!\n"
-                        f"🌍 Location: {service['location']}\n"
-                        f"🔗 URL: \n"
-                        f"🕒 Timestamp: {service['timestamp']}\n"
-                        for service in down_services
-                        ])
+                    # Write down services to a file
+                    with open(self.USER_LOG_FILE, "a") as f:
+                        for down_service in down_services:
+                            for key,val in down_service.items():
+                                f.write(f"{key}: {val} \n")
+                    
+                    for service in down_services[:self.NOTIFY_LIMIT]:
+                        alert_message = f"""
+                        🔴 Service **{service['name']}** {service['url']} is DOWN!\n"
+                        🌍 Location: {service['location']}
+                        🕒 Timestamp: {service['timestamp']}\n"""
+                        self.brief_notify(alert_message)
 
-                        if self.slack_channel:
-                            self.send_slack(message=alert_message)
-                        else:
-                            self.send_via_hook(alert_message)
-                            self.log_message(f"Service: {service['name']}, ID: {service['id']}, URL: {service['url']}, Timestamp: {service['timestamp']}, Location: {service['location']}")
-
-                    subject = f"⚠️ Service Downtime Alert: {len(down_services)} Services Are Down"
-                    body = "The following services have been detected as down:\n" + alert_message
+                    if self.USER_LOG_FILE:
+                        subject = f"⚠️ Service Downtime Alert: {len(down_services)} Services Are Down"
+                        body = "The following services have been detected as down: Check attached log file\n"
+                        self.full_notify(subject=subject,message=body)
                     self.send_mail(subject=subject, body=body)
 
                 return down_services
@@ -146,5 +140,3 @@ class ServiceMonitor:
         except Exception as e:
             self.log_message(f"Unexpected error: {e}")
             return None
-
-  

@@ -4,10 +4,8 @@ import argparse
 import time
 from dotenv import load_dotenv
 from rules import  Rule
-from mail import SendMail
-from host import Host
-from latency import Latency
-from slack import Slack
+from metrics import (Latency,Host)
+from monitor import Monitor
 
 # Command Line Args Error Handling
 def error_handler(errmsg):
@@ -16,95 +14,114 @@ def error_handler(errmsg):
     print(f"\t[?] Error: {errmsg}\n")
     sys.exit()
 
-# Command Line Arguments
 def argument_handler():
     """Handle command-line arguments."""
     parser = argparse.ArgumentParser(description="Anomaly Monitoring and Notification Script")
     parser.add_argument("-u", "--url", default=os.getenv('KIBANA_URL'), help='Elastic base URL')
-    parser.add_argument("-i", "--id", type=str,default=os.getenv('ANOMALY_RULE_ID',''), help='Rule ID to query data from')
-    parser.add_argument("-t", "--time", type=int, default=os.getenv('SLEEP_TIME',60), help='Time to sleep')
-    parser.add_argument("-l", "--latency", type=int, default=os.getenv('LATENCY_THRESHOLD',1000), help='Check for a given latency value in ms')
-    parser.add_argument("-c", "--cpu", type=int, default=os.getenv('CPU_THRESHOLD',99) , help='Check for a given CPU % threshold value ie 80')
-    parser.add_argument("-s", "--service", type=str, default=os.getenv('SERVICE_ID',''), help='Rule ID for service to query data from')
-    parser.add_argument("-m", "--mail", type=str, required=False,default=os.getenv('EMAIL_RECEIVER',''),help="Receiver's email address")
-    parser.add_argument("-ns", "--notifyslack", type=str, required=False,default= os.getenv('SLACK_CHANNEL'), help="Send notification to slack by attaching channel name")
-    parser.add_argument("-f", "--file", type=str, default=os.getenv('LOG_FILE','anomaly.log'), help='Log file to save output')
-    parser.add_argument("-v", "--verbose", default=os.getenv('VERBOSE',True),action="store_true", help="Enable verbose mode")
-    parser.error = error_handler
+    parser.add_argument("-i", "--id", type=str, default=os.getenv('ANOMALY_RULE_ID', ''), help='Rule ID to query data from')
+    parser.add_argument("-t", "--time", type=int, default=int(os.getenv('SLEEP_TIME', 60)), help='Time to sleep')
+    parser.add_argument("-l", "--latency", type=int, default=int(os.getenv('LATENCY_THRESHOLD', 1000)), help='Latency threshold in ms')
+    parser.add_argument("-nl", "--notifylimit", type=int, default=int(os.getenv('NOTIFY_LIMIT', 3)), help='Number of notifications per batch')
+    parser.add_argument("-c", "--cpu", type=int, default=int(os.getenv('CPU_THRESHOLD', 99)), help='CPU usage threshold in %')
+    parser.add_argument("-s", "--service", type=str, default=os.getenv('SERVICE_ID', ''), help='Service ID for queries')
+    parser.add_argument("-m", "--mail", type=str, default=os.getenv('EMAIL_RECEIVER', ''), help="Receiver's email address")
+    parser.add_argument("-ns", "--notifyslack", type=str, default=os.getenv('SLACK_CHANNEL',''), help="Slack channel for notifications")
+    parser.add_argument("-st","--slacktoken", type=str, default=os.getenv('SLACK_TOKEN',''), help="Slack token or slack api key for sdk")
+    parser.add_argument("-f", "--file", type=str, default=os.getenv('APP_LOG_FILE', 'anomaly.log'), help='Log file')
+    parser.add_argument("-v", "--verbose", action="store_true", default=os.getenv('VERBOSE', True), help="Enable verbose mode")
+    parser.add_argument("-w", "--webhook", type=str, default=os.getenv('SLACK_WEBHOOK_URL', ''), help="Slack webhook URL")
+    parser.add_argument("--smtp_server", type=str, default=os.getenv('SMTP_SERVER', ''), help="SMTP server address")
+    parser.add_argument("--smtp_port", type=int, default=int(os.getenv('SMTP_PORT', 587)), help="SMTP port number")
+    parser.add_argument("--smtp_user", type=str, default=os.getenv('SMTP_USER', ''), help="SMTP username")
+    parser.add_argument("--smtp_password", type=str, default=os.getenv('SMTP_PASSWORD', ''), help="SMTP password")
+    parser.add_argument("--userlog", type=str, default=os.getenv('USER_LOG_FILE', 'user_activity.log'), help="User activity log file")
+    parser.add_argument("--hits_size", type=int, default=int(os.getenv('HITS_SIZE', 100)), help="Hits size per query")
+
     return parser.parse_args()
 
-def main(url, rule_id, receiver, verbose, save, savefile,sid,interval,slack_channel,latency,cpu):
+def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_user, smtp_password, receiver,
+         slack_channel, sleep_time, notify_limit, hits_size, log_file, save, verbose, user_log_file,
+         latency_threshold, cpu_threshold, rule_id, service_id):
     """Monitor anomalies and send notifications."""
-
-    def log_message(message=None, filename=savefile):
-        """Log messages to console and optionally save to file."""
-        if verbose:
-            print(message)
-        if save and filename:
-            with open(filename, "a") as f:
-                f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
-  
-    log_message("Monitoring started...")
-    API_KEY = os.getenv('KIBANA_API_KEY')
-    headers = {
-            "Authorization": f"ApiKey {API_KEY}",
-            "kbn-xsrf": "true",
-            "Content-Type": "application/json",
-    }
+    print("Monitoring started...")
     while True:
-        try:           
-            # Send mail notification
-            send_mail = SendMail(receiver=receiver, log_message=log_message)
-            slack_token = os.getenv("SLACK_TOKEN")
-            webhook_url=os.getenv("SLACK_WEBHOOK_URL")
-
-            #Send notification via slack
-            slack = Slack (channel=slack_channel,slack_token=slack_token,log_message=log_message,webhook_url=webhook_url)
+        try:
+            # Configure base class params
+            base_config = {
+            'kibana_url': url,
+            'api_key': api_key,
+            'slack_token': slack_token,
+            'webhook_url': webhook_url,
+            'smtp_server': smtp_server,
+            'smtp_port': smtp_port,
+            'smtp_user': smtp_user,
+            'smtp_password': smtp_password,
+            'receiver': receiver,
+            'slack_channel': slack_channel,
+            'sleep_time': sleep_time,
+            'notify_limit': notify_limit,
+            'hits_size': hits_size,
+            'log_file': log_file,
+            'save': save,
+            'verbose': verbose,
+            'user_log_file': user_log_file,
+            'latency_threshold': latency_threshold,
+            'cpu_threshold': cpu_threshold,
+            'rule_id': rule_id,
+            'service_id': service_id
+            }
 
             # Fetch from rule
-            rule = Rule(service_id=sid,kibana_url=url,rule_id=rule_id,log_message=log_message,send_mail=send_mail.send_mail,headers=headers,send_slack=slack.send_notification, slack_channel=slack_channel,send_via_hook=slack.send_via_hook)
-            
+            rule = Rule(**base_config)
             # Host CPU Usage
-            rule.fetch_host_alerts()
-            log_message('\t Fetching Host CPU Data Usage complete...')
-            
-            # # # Service Latency  
+            rule.fetch_host_alerts()  
+            # Service Latency  
             rule.fetch_service_alerts()
-            log_message('\t Fetching Services Latency Check complete...')
-
-            # # Fetch Host Data
-            host = Host(kibana_url=url,headers=headers,log_message=log_message,send_mail=send_mail.send_mail,send_via_hook=slack.send_via_hook,send_slack=slack.send_notification,slack_channel=slack_channel,cpu_threshold=cpu)
+            # Fetch Host Data
+            host = Host(**base_config)
             host.get_cpu_usage()
-            
-            log_message('\t Fetching CPU Data complete...')
-
-            #Fetch Latency Data
-            latency = Latency(url=url,headers=headers,log_message=log_message,send_mail=send_mail.send_mail,send_slack=slack.send_notification,slack_channel=slack_channel,latency_threshold=latency,send_via_hook=slack.send_via_hook)
+            # Fetch Latency Data
+            latency = Latency(**base_config)
             latency.get_latency()
-            log_message('\t Fetching Latency Data complete...')
-
-            log_message('\t Sleeping for {} seconds...'.format(interval))
-            time.sleep(interval)
+            
+            # Check Downtime
+            monitor = Monitor(**base_config)
+            monitor.check_host_downtime()
+            monitor.check_service_downtime()
+ 
+            print('\t Sleeping for {} seconds...'.format(sleep_time))
+            time.sleep(sleep_time)
+           
         
         except Exception as e:
-            log_message(f"Unexpected error: {e}")
-            log_message('\t Sleeping for {} seconds...'.format(interval))
-            time.sleep(interval)
+            print(f"Unexpected error: {e}")
+            print('\t Sleeping for {} seconds...'.format(sleep_time))
+            time.sleep(sleep_time)
 
 if __name__ == "__main__":
     load_dotenv()
 
     args = argument_handler()
-    url = args.url
-    rule_id = args.id
-    receiver = args.mail
-    verbose = args.verbose
-    savefile = args.file
-    latency = args.latency
-    cpu = args.cpu
-    save = bool(savefile)
-    sid = args.service
-    slack_channel = args.notifyslack or os.getenv("SLACK_CHANNEL",None)
-    interval=int(args.time)
- 
-    main(url, rule_id, receiver, verbose, save, savefile,sid,interval,slack_channel,latency,cpu)
+    main(
+        url=args.url,
+        api_key=os.getenv("KIBANA_API_KEY", ""),
+        slack_token=args.slacktoken,
+        webhook_url=args.webhook,
+        smtp_server=args.smtp_server,
+        smtp_port=args.smtp_port,
+        smtp_user=args.smtp_user,
+        smtp_password=args.smtp_password,
+        receiver=args.mail,
+        slack_channel=args.notifyslack,
+        sleep_time=args.time,
+        notify_limit=args.notifylimit,
+        hits_size=args.hits_size,
+        log_file=args.file,
+        save=bool(args.file),
+        verbose=args.verbose,
+        user_log_file=args.userlog,
+        latency_threshold=args.latency,
+        cpu_threshold=args.cpu,
+        rule_id=args.id,
+        service_id=args.service
+    )
