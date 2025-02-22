@@ -1,7 +1,6 @@
 import requests
 from base import Base
 
-
 class Logs(Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
