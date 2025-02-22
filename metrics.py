@@ -7,7 +7,7 @@ class Latency(Base):
         super().__init__(**kwargs)
     def fetch_latency_data(self):
             """Fetch latency data from Elastic Search."""
-            self.log_message("Fetching Latency Data From Elastic...")
+            self.log_message("\n[+] Started Fetching Latency Data From Elastic...")
             url = f"{self.KIBANA_URL}/_search"
             query = {
                 "size": self.HITS_SIZE,
@@ -38,7 +38,7 @@ class Latency(Base):
     def process_latency_data(self, data):
         """Process latency data and identify affected hosts."""
         hits = data.get("hits", {}).get("hits", [])
-        self.log_message(f"Found [{len(hits)}] services")
+        self.log_message(f"Found [{len(hits)}] services. Checking {self.LATENCY_THRESHOLD} ms threshold...")
         
         affected_hosts = []
         for hit in hits:
@@ -77,14 +77,14 @@ HTTP Latency: {host['http']} ms
             """
             self.brief_notify(message=message)
            
-        subject = f"High Latency Detected on {len(affected_hosts)} Hosts"
-        body = f"Latency exceeded threshold on {len(affected_hosts)} hosts. Check attached log."
-        self.write_to_log_file(affected_hosts)
-
         if self.USER_LOG_FILE:
+            subject = f"High Latency Detected on {len(affected_hosts)} Hosts"
+            body = f"Latency exceeded threshold on {len(affected_hosts)} hosts. Check attached log."
+            self.write_to_log_file(affected_hosts,subject)
             self.full_notify(subject=subject,message=body)
+        
         self.log_message(f"Affected Services: {len(affected_hosts)} \n")
-        self.log_message('\t Fetching Latency Data complete...')
+        self.log_message('[+] Fetching Latency Data complete...')
 
     def get_latency(self):
         """Main function to fetch, process, and notify about high latency."""
@@ -94,11 +94,14 @@ HTTP Latency: {host['http']} ms
             self.notify_high_latency(affected_hosts)
 
 class Host(Base):
+    def __init__(self, **kwargs):
+        # Call parent class's __init__ with all arguments
+        super().__init__(**kwargs)
+
     def get_cpu_usage(self):
         """Fetch CPU usage per inventory item."""
-        self.log_message("Started fetching CPU Usage Data From Elastic...")
+        self.log_message("\n[-] Started fetching CPU Usage Data From Elastic...")
         url = f"{self.KIBANA_URL}/metricbeat-*/_search"
-
         query = {
             "query": {
                 "bool": {
@@ -134,7 +137,7 @@ class Host(Base):
             data = response.json()
 
             hits = data.get("hits", {}).get("hits", [])
-            self.log_message(f"Found [{len(hits)}] hosts")
+            self.log_message(f"Found [{len(hits)}] hosts. Checking {self.CPU_THRESHOLD}% threshold...")
 
             affected_hosts = []
             affected_host_names = set()
@@ -156,7 +159,7 @@ class Host(Base):
                 # Round to 2dp
                 cpu_usage = round(cpu_usage,2)
 
-                if cpu_usage > self.CPU_THRESHOLD and host_name not in affected_host_names:
+                if cpu_usage >= self.CPU_THRESHOLD and host_name not in affected_host_names:
                     host_dict = {
                         "name": host_name,
                         "timestamp": metadata.get("@timestamp", time.strftime("%Y-%m-%d %H:%M:%S")),
@@ -174,7 +177,9 @@ class Host(Base):
 
                     affected_hosts.append(host_dict)
                     affected_host_names.add(host_name)
-                    self.log_message(f"{host_name} - CPU usage: {cpu_usage}%")
+
+                    if self.VERBOSE:
+                     self.log_message(f"{host_dict['timestamp']} - {host_name} - CPU usage: {cpu_usage}%")
 
             if affected_hosts:
                 self.notify_high_cpu_usage(affected_hosts)
@@ -193,6 +198,7 @@ class Host(Base):
     def notify_high_cpu_usage(self, affected_hosts):
         """Send notifications for high CPU usage."""
         if not affected_hosts:
+            self.log_message(f"[+] Fetching CPU Usage Data complete [0] Affected Hosts...")
             return
         for host in affected_hosts[: self.NOTIFY_LIMIT]:
             message = f"""
@@ -204,32 +210,32 @@ System: {host.get('platform', 'unknown')} | Kernel: {host.get('kernel', 'unknown
 Timestamp: {host.get('timestamp', '')}
 
 # CPU Usage
-System CPU Cores: {host.get("sys_cores", "0")} cores
-System User Usage: {host.get("sys_user_usage", "0.00")}
-System CPU Usage: {host.get("sys_cpu_usage", "0.00")}
+System CPU Cores: {host.get('sys_cores', '0')} cores
+System User Usage: {host.get('sys_user_usage', '0.00')}
+System CPU Usage: {host.get('sys_cpu_usage', '0.00')}
 CPU Usage Calculation: {self.calculate_cpu_usage(host)}
 
 # System Load    
-System Load: {host.get("sys_load", "unavailable")}
-System Load Cores: {host.get("load_cores", "unavailable")}
+System Load: {host.get('sys_load','unavailable')}
+System Load Cores: {host.get('load_cores','unavailable')}
 
 # Memory
-Memory Usage: {host.get("memory_usage", "unknown")}%  
+Memory Usage: {host.get('memory_usage','unknown')}%  
 
 # Disk Usage
-Disk Usage: {host.get("disk_usage", "unknown")}%  
+Disk Usage: {host.get('disk_usage','unknown')}%  
 """             
             self.brief_notify(message=message)
-
-        self.write_to_log_file(affected_hosts)
-
+        
+       
         if self.USER_LOG_FILE:
-            subject = f"🔴 High CPU Usage Detected on [{len(affected_hosts)}] Hosts ❌"
+            subject = f"🔴 High CPU Usage Detected on [{len(affected_hosts)}] Hosts ❌" 
             body = f"CPU usage on {len(affected_hosts)} hosts exceeded {self.CPU_THRESHOLD}%. Check file attachment for logs."
+            self.write_to_log_file(affected_hosts,subject)
             self.full_notify(subject=subject,message=body)
        
         self.log_message(f"Affected Hosts: {len(affected_hosts)}")
-        self.log_message('\t Fetching CPU Data complete...')
+        self.log_message('[+] Fetching CPU Data complete...\n\n')
 
     @staticmethod
     def calculate_cpu_usage(host):

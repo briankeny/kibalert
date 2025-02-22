@@ -43,10 +43,12 @@ class Base:
         self.SMTP_PASSWORD = smtp_password 
         self.EMAIL_RECEIVER = receiver
 
-    def write_to_log_file(self, log_data):
+    def write_to_log_file(self, log_data, title=''):
         """Write log data to file."""
         if log_data:
-            with open(self.USER_LOG_FILE, "w") as file:
+            with open(self.USER_LOG_FILE, "a") as file:
+                if title:
+                    file.write(f"\n{title}\n")
                 for log in log_data:
                     file.write(
                         ", ".join(f"{key}: {val}" for key, val in log.items()) + "\n"

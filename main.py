@@ -95,7 +95,7 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
         
         except Exception as e:
             print(f"Unexpected error: {e}")
-            print('\t Sleeping for {} seconds...'.format(sleep_time))
+            print('\n\n\t Sleeping for {} seconds...\n'.format(sleep_time))
             time.sleep(sleep_time)
 
 if __name__ == "__main__":

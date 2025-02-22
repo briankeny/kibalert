@@ -29,6 +29,8 @@ class Rule(Base):
     
     def _process_alerts(self, alerts, is_host_alert=True):
         """Process alerts and extract relevant information."""
+        alerts = alerts or []
+        self.log_message('Found {} alerts'.format(len(alerts)))
         extracted_data = []
         for alert in alerts:
             alert_source = alert.get('_source', {})
@@ -84,23 +86,29 @@ Features: {alert['features']}
                     message += f"\nLatency Threshold: {alert['latency_threshold']} ms\n"
                 
                 self.brief_notify(message=message)
-
-        if self.USER_LOG_FILE:
-            self.write_to_log_file(alerts)        
-            subject = f"High {'CPU Usage' if is_host_alert else 'Latency'} Detected on {len(alerts)} {'hosts' if is_host_alert else 'services'}"
+        
+        if self.USER_LOG_FILE:        
+            subject = f"Rule Alert for {'CPU Usage' if is_host_alert else 'Latency'} Detected on {len(alerts)} {'hosts' if is_host_alert else 'services'}"
             body = f"{'CPU usage' if is_host_alert else 'Latency'} exceeded threshold. A file with logs is attached."
-        self.full_notify(subject=subject,message=body)
+            self.write_to_log_file(alerts,subject)
+            self.full_notify(subject=subject,message=body)
+       
+        if self.VERBOSE:
+            for alert in alerts:
+                self.log_message(f"{alert['timestamp']} - {alert['name']} - {alert['alert_reason']} - {alert['alert_status']}")
+
+        self.log_message(f"[+] Fetching {'Host' if is_host_alert else 'services'} Alerts complete. Concluded {len(alerts)} ...")    
     
     def fetch_host_alerts(self):
         """Fetch and process alerts for host CPU usage."""
-        self.log_message(f'Fetching alerts for HOST CPU Usage from rule {self.ANOMALY_RULE_ID} started...')
+        self.log_message(f'[-]  Fetching alerts for HOST CPU Usage from rule {self.ANOMALY_RULE_ID} started...')
         alerts = self._fetch_alerts(self.ANOMALY_RULE_ID)
         processed_alerts = self._process_alerts(alerts, is_host_alert=True)
         self._send_notifications(processed_alerts, is_host_alert=True)
     
     def fetch_service_alerts(self):
         """Fetch and process alerts for service latency."""
-        self.log_message(f'Fetching alerts for Latencies Exceeded alerts from rule {self.SERVICE_ID} started...')
+        self.log_message(f'[-]  Fetching alerts for Latencies Exceeded alerts from rule {self.SERVICE_ID} started...')
         alerts = self._fetch_alerts(self.SERVICE_ID)
         processed_alerts = self._process_alerts(alerts, is_host_alert=False)
         self._send_notifications(processed_alerts, is_host_alert=False)
