@@ -118,3 +118,4 @@ venv.bak/
 *.local
 
 # Custom files/directories (add your own here)
+report*
