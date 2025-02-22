@@ -13,7 +13,7 @@ from email import encoders
 load_dotenv()
 
 class Base:
-    def __init__(self,kibana_url,api_key,slack_token,webhook_url,smtp_server,smtp_port,smtp_user,smtp_password,receiver,slack_channel, sleep_time,notify_limit, hits_size,log_file,save,verbose,user_log_file,latency_threshold,cpu_threshold,rule_id,service_id):
+    def __init__(self,kibana_url,api_key,slack_token,webhook_url,smtp_server,smtp_port,smtp_user,smtp_password,receiver,slack_channel, sleep_time,notify_limit, hits_size,log_file,save,verbose,user_log_file,latency_threshold,cpu_threshold,rule_id,service_id,ai_prompt,ai_model,ai_context):
         self.KIBANA_URL = kibana_url
         self.API_KEY = api_key 
         self.headers = {
@@ -34,15 +34,21 @@ class Base:
         self.USER_LOG_FILE = user_log_file
         self.SAVE = save 
         self.VERBOSE = verbose 
+        # Slack variables
         self.SLACK_TOKEN = slack_token
         self.client = WebClient(token=self.SLACK_TOKEN)
         self.WEBHOOK_URL = webhook_url
+        # SMTP variables
         self.SMTP_SERVER = smtp_server 
         self.SMTP_PORT = smtp_port 
         self.SMTP_USER = smtp_user 
         self.SMTP_PASSWORD = smtp_password 
         self.EMAIL_RECEIVER = receiver
-
+        # AI variables
+        self.AI_PROMPT =  ai_prompt or ''
+        self.MODEL_NAME = ai_model
+        self.AI_CONTEXT = ai_context 
+       
     def write_to_log_file(self, log_data, title=''):
         """Write log data to file."""
         if log_data:
@@ -178,9 +184,10 @@ class Base:
         else:
             self.send_via_hook(message)
   
-    def full_notify(self, subject, message):
+    def full_notify(self, subject, message,file_path=None):
         """Send a Full notification via Slack, webhook, or email with attachments"""
-        if self.USER_LOG_FILE:
+        file_path = file_path or self.USER_LOG_FILE
+        if file_path:
             if self.SLACK_CHANNEL:
-                self.send_slack(message=message, file_path=self.USER_LOG_FILE)
-            self.send_mail(subject=subject, body=message, attachment=self.USER_LOG_FILE)
+                self.send_slack(message=message, file_path=file_path)
+            self.send_mail(subject=subject, body=message, attachment=file_path)

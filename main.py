@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from rules import  Rule
 from metrics import (Latency,Host)
 from monitor import Monitor
+from logs import Logs
+from genai import AI
 
 # Command Line Args Error Handling
 def error_handler(errmsg):
@@ -43,7 +45,8 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
          slack_channel, sleep_time, notify_limit, hits_size, log_file, save, verbose, user_log_file,
          latency_threshold, cpu_threshold, rule_id, service_id):
     """Monitor anomalies and send notifications."""
-    print("Monitoring started...")
+    if verbose:
+        print("Kibalert monitoring started...")
     while True:
         try:
             # Configure base class params
@@ -68,34 +71,46 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
             'latency_threshold': latency_threshold,
             'cpu_threshold': cpu_threshold,
             'rule_id': rule_id,
-            'service_id': service_id
+            'service_id': service_id,
+            'ai_prompt' : 'Analyse data and provide insights. Generate a pdf or word report',
+            'ai_model':os.getenv('AI_MODEL',None),
+            'ai_context' : os.getenv('AI_CONTEXT',''),
             }
 
-            # Fetch from rule
-            rule = Rule(**base_config)
-            # Host CPU Usage
-            rule.fetch_host_alerts()  
-            # Service Latency  
-            rule.fetch_service_alerts()
-            # Fetch Host Data
-            host = Host(**base_config)
-            host.get_cpu_usage()
-            # Fetch Latency Data
-            latency = Latency(**base_config)
-            latency.get_latency()
+            # # Fetch from rule
+            # rule = Rule(**base_config)
+            # # Host CPU Usage
+            # rule.fetch_host_alerts()  
+            # # Service Latency  
+            # rule.fetch_service_alerts()
+            # # Fetch Host Data
+            # host = Host(**base_config)
+            # host.get_cpu_usage()
+            # # Fetch Latency Data
+            # latency = Latency(**base_config)
+            # latency.get_latency()
             
-            # Check Downtime
-            monitor = Monitor(**base_config)
-            monitor.check_host_downtime()
-            monitor.check_service_downtime()
- 
-            print('\t Sleeping for {} seconds...'.format(sleep_time))
+            # # Check Downtime
+            # monitor = Monitor(**base_config)
+            # monitor.check_host_downtime()
+            # monitor.check_service_downtime()
+            
+            # Collect Logs
+            logs = Logs(**base_config)
+            logs.fetch_logs() 
+
+            # AI
+            ai = AI(**base_config)
+            ai.generateAIresponse()
+
+            if verbose:
+                print('\t Sleeping for {} seconds...'.format(sleep_time))
             time.sleep(sleep_time)
            
-        
         except Exception as e:
-            print(f"Unexpected error: {e}")
-            print('\n\n\t Sleeping for {} seconds...\n'.format(sleep_time))
+            if verbose:
+                print(f"Unexpected error: {e}")
+                print('\n\n\t Sleeping for {} seconds...\n'.format(sleep_time))
             time.sleep(sleep_time)
 
 if __name__ == "__main__":
