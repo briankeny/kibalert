@@ -14,7 +14,6 @@ genai.configure(api_key=GOOGLE_API_KEY)
 
 class AI(Base):
     def __init__(self, **kwargs):
-        # Call parent class's __init__ with all arguments
         super().__init__(**kwargs)
 
     def generateAIresponse(self):
@@ -94,7 +93,7 @@ class AI(Base):
                     f.write(response.text)
                     if self.VERBOSE:
                         self.log_message('AI response report has been saved to ' + report_name)
-                self.full_notify(subject='AI Analysis', message=report_name,file_path=report_name)
+                self.full_notify(subject='AI Analysis',message=report_name,file_path=report_name)
                 self.log_message('[+] AI response generation complete ...')
                 return response
             else:

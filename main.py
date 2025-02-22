@@ -72,28 +72,28 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
             'cpu_threshold': cpu_threshold,
             'rule_id': rule_id,
             'service_id': service_id,
-            'ai_prompt' : 'Analyse data and provide insights. Generate a pdf or word report',
+            'ai_prompt' : 'Analyse data and provide insights. Generate a pdf report',
             'ai_model':os.getenv('AI_MODEL',None),
             'ai_context' : os.getenv('AI_CONTEXT',''),
             }
 
-            # # Fetch from rule
-            # rule = Rule(**base_config)
-            # # Host CPU Usage
-            # rule.fetch_host_alerts()  
-            # # Service Latency  
-            # rule.fetch_service_alerts()
-            # # Fetch Host Data
-            # host = Host(**base_config)
-            # host.get_cpu_usage()
-            # # Fetch Latency Data
-            # latency = Latency(**base_config)
-            # latency.get_latency()
+            # Fetch from rule
+            rule = Rule(**base_config)
+            # Host CPU Usage
+            rule.fetch_host_alerts()  
+            # Service Latency  
+            rule.fetch_service_alerts()
+            # Fetch Host Data
+            host = Host(**base_config)
+            host.get_cpu_usage()
+            # Fetch Latency Data
+            latency = Latency(**base_config)
+            latency.get_latency()
             
-            # # Check Downtime
-            # monitor = Monitor(**base_config)
-            # monitor.check_host_downtime()
-            # monitor.check_service_downtime()
+            # Check Downtime
+            monitor = Monitor(**base_config)
+            monitor.check_host_downtime()
+            monitor.check_service_downtime()
             
             # Collect Logs
             logs = Logs(**base_config)
