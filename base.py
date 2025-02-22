@@ -51,7 +51,7 @@ class Base:
                     file.write(f"\n{title}\n")
                 for log in log_data:
                     file.write(
-                        ", ".join(f"{key}: {val}" for key, val in log.items()) + "\n"
+                        ", ".join(f"{key}: {str(val)}" for key, val in log.items()) + "\n"
                     )
 
     def send_slack(self, message, file_path=None):
