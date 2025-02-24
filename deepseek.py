@@ -1,13 +1,7 @@
-import os
 import uuid
 import requests
-from dotenv import load_dotenv
 from base import Base
 
-load_dotenv()
-
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
-DEEPSEEK_API_URL = os.getenv('DEEPSEEK_API_URL', "https://api.deepseek.com/v1/chat/completions")
 
 class DeepSeek(Base):
     def __init__(self, **kwargs):
@@ -18,7 +12,7 @@ class DeepSeek(Base):
         Sends a prompt to the DeepSeek API and returns the response.
         """
         headers = {
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Authorization": f"Bearer {self.DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }
         payload = {
@@ -31,7 +25,7 @@ class DeepSeek(Base):
             "max_tokens": max_tokens
         }
         try:
-            response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
+            response = requests.post(self.DEEPSEEK_API_URL, headers=headers, json=payload)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -42,9 +36,9 @@ class DeepSeek(Base):
         """
         Generates a report using the DeepSeek model.
         """
-        if not self.MODEL_NAME or DEEPSEEK_API_KEY is None:
+        if not self.DEEPSEEK_API_MODEL or not self.DEEPSEEK_API_KEY:
             if self.VERBOSE:
-                self.log_message('[+] No AI model selected')
+                self.log_message('[+] DeepSeek AI model selected')
             return
         
         if self.VERBOSE:
@@ -74,7 +68,7 @@ class DeepSeek(Base):
                 combined_prompt = "\n".join(content)
                 response = self.promptDeepSeek(
                     prompt=combined_prompt,
-                    model=self.MODEL_NAME,
+                    model=self.DEEPSEEK_API_MODEL,
                     temperature=0.7,
                     max_tokens=1000
                 )
@@ -92,6 +86,7 @@ class DeepSeek(Base):
 
                     # Notify about the report
                     self.full_notify(subject='AI Analysis', message=report_name, file_path=report_name)
+                    
                     if self.VERBOSE:
                         self.log_message('[+] DeepSeekAI generation complete ...')
                     return generated_text

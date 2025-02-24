@@ -7,8 +7,9 @@ from rules import  Rule
 from metrics import (Latency,Host)
 from monitor import Monitor
 from logs import Logs
-from genai import AI
+from genai import GeminiAI
 from deepseek import DeepSeek
+from gptai import GptAI
 
 # Command Line Args Error Handling
 def error_handler(errmsg):
@@ -76,6 +77,11 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
             'ai_prompt' : 'Analyse the data and provide insights and resources like links to learn more or address the issues. Generate a detailed report to include findings, actions and reccommendations',
             'ai_model':os.getenv('AI_MODEL',None),
             'ai_context' : os.getenv('AI_CONTEXT',''),
+            'deep_seek_key' : os.getenv('DEEPSEEK_API_KEY',None),
+            'deep_seek_url' :os.getenv('DEEPSEEK_API_URL', 'https://api.deepseek.com/v1/chat/completions'),
+            'deep_seek_model': os.getenv('DEEPSEEK_API_MODEL','deepseek-model'),
+            'openai_model': os.getenv('GPT_MODEL_NAME', 'gpt-3.5-turbo'),
+            'openai_api_key' :os.getenv('GPT_API_KEY',None) 
             }
 
             # Fetch from rule
@@ -101,12 +107,16 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
             logs.fetch_logs() 
 
             # Gemini AI
-            ai = AI(**base_config)
+            ai = GeminiAI(**base_config)
             ai.generateAIresponse()
 
             #Deep Seek
-            deepseek = DeepSeek(**base_config)
-            deepseek.generateReport()
+            # deepseek = DeepSeek(**base_config)
+            # deepseek.generateReport()
+
+            # OpenAI GPT
+            # gpt = GptAI(**base_config)
+            # gpt.promptGPT()
 
             if verbose:
                 print('\t Sleeping for {} seconds...'.format(sleep_time))

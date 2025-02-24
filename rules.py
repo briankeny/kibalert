@@ -43,6 +43,7 @@ class Rule(Base):
                 "rule_category": alert_source.get('kibana.alert.rule.category', ''),
                 "alert_reason": alert_source.get('kibana.alert.reason', ''),
                 "timestamp": alert_source.get('@timestamp', time.strftime('%Y-%m-%d %H:%M:%S')),
+                "threshold": alert_source.get('kibana.alert.evaluation.threshold', ''),
             }
             if is_host_alert:
                 data.update({
@@ -54,7 +55,6 @@ class Rule(Base):
                 })
             else:
                 data.update({
-                    "latency_threshold": alert_source.get('kibana.alert.evaluation.threshold', ''),
                     "language": alert_source.get('service.language.name', ''),
                     "transaction_type": alert_source.get('transaction.type', ''),
                     "service_environment": alert_source.get('service.environment', ''),
@@ -75,16 +75,13 @@ Alert Status: {alert['alert_status']}
 Entity: {alert['name']}
 Started: {alert['started']}
 Timestamp: {alert['timestamp']}
+Threshold: {alert['threshold']}
 
 Reason: {alert['alert_reason']}
 Rule Category: {alert['rule_category']}
 Features: {alert['features']}
                 """
-                if is_host_alert:
-                    message += f"\nOS: {alert['os']}\nKernel: {alert['kernel']}\n"
-                else:
-                    message += f"\nLatency Threshold: {alert['latency_threshold']} ms\n"
-                
+               
                 self.brief_notify(message=message)
         
         if self.USER_LOG_FILE:        

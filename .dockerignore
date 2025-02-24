@@ -2,3 +2,5 @@ venv
 .env.example
 log*
 *.log
+report*
+*.md

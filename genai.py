@@ -9,7 +9,7 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
 
-class AI(Base):
+class GeminiAI(Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -20,6 +20,7 @@ class AI(Base):
             return
         self.log_message('[-] AI response generation started...')   
         content = []
+
         if self.AI_PROMPT:
             content.append(self.AI_PROMPT)
 

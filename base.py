@@ -13,7 +13,7 @@ from email import encoders
 load_dotenv()
 
 class Base:
-    def __init__(self,kibana_url,api_key,slack_token,webhook_url,smtp_server,smtp_port,smtp_user,smtp_password,receiver,slack_channel, sleep_time,notify_limit, hits_size,log_file,save,verbose,user_log_file,latency_threshold,cpu_threshold,rule_id,service_id,ai_prompt,ai_model,ai_context):
+    def __init__(self,kibana_url,api_key,slack_token,webhook_url,smtp_server,smtp_port,smtp_user,smtp_password,receiver,slack_channel, sleep_time,notify_limit, hits_size,log_file,save,verbose,user_log_file,latency_threshold,cpu_threshold,rule_id,service_id,ai_prompt,ai_model,ai_context,deep_seek_key, deep_seek_url,deep_seek_model,openai_model,openai_api_key):
         self.KIBANA_URL = kibana_url
         self.API_KEY = api_key 
         self.headers = {
@@ -48,7 +48,16 @@ class Base:
         self.AI_PROMPT =  ai_prompt or ''
         self.MODEL_NAME = ai_model
         self.AI_CONTEXT = ai_context 
-       
+        
+        # Deepseek variables
+        self.DEEPSEEK_API_KEY = deep_seek_key or None
+        self.DEEPSEEK_API_URL = deep_seek_url or None
+        self.DEEPSEEK_API_MODEL = deep_seek_model or  'deepseek-model'
+
+        # OpenAI variables
+        self.GPT_MODEL_NAME = openai_model or 'gpt-3.5-turbo'
+        self.GPT_API_KEY = openai_api_key or None
+
     def write_to_log_file(self, log_data, title=''):
         """Write log data to file."""
         if log_data:

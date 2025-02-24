@@ -111,18 +111,21 @@ Ensure all your environment variables are properly configured
  python main.py
 ```
 
+Alternatively
+
 Make the script executable:
 ```bash
 chmod +x main.py
 ```
 
-Add a shebang line at the beginning of `main.py`:
+Add a shebang line at the beginning of `main.py`: Ensure that the path to your bin/env is correct
+
 ```python
 #!/usr/bin/env python3
 ```
 Then execute the script directly:
 ```bash
-./main.py -m admin@example.com -t 600
+./main.py 
 ```
 
 ## Logging
