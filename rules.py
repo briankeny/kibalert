@@ -98,6 +98,9 @@ Features: {alert['features']}
     
     def fetch_host_alerts(self):
         """Fetch and process alerts for host CPU usage."""
+        if not self.ANOMALY_RULE_ID:
+            self.log_message('[-] ANOMALY_RULE_ID not found. Skipping rule alerts.')
+            return
         self.log_message(f'[-]  Fetching alerts for HOST CPU Usage from rule {self.ANOMALY_RULE_ID} started...')
         alerts = self._fetch_alerts(self.ANOMALY_RULE_ID)
         processed_alerts = self._process_alerts(alerts, is_host_alert=True)
@@ -105,6 +108,9 @@ Features: {alert['features']}
     
     def fetch_service_alerts(self):
         """Fetch and process alerts for service latency."""
+        if not self.SERVICE_ID:
+            self.log_message('[-] SERVICE_ID not found. Skipping rule alerts.')
+            return
         self.log_message(f'[-]  Fetching alerts for Latencies Exceeded alerts from rule {self.SERVICE_ID} started...')
         alerts = self._fetch_alerts(self.SERVICE_ID)
         processed_alerts = self._process_alerts(alerts, is_host_alert=False)
