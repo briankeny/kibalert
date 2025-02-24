@@ -8,6 +8,7 @@ from metrics import (Latency,Host)
 from monitor import Monitor
 from logs import Logs
 from genai import AI
+from deepseek import DeepSeek
 
 # Command Line Args Error Handling
 def error_handler(errmsg):
@@ -72,7 +73,7 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
             'cpu_threshold': cpu_threshold,
             'rule_id': rule_id,
             'service_id': service_id,
-            'ai_prompt' : 'Analyse data and provide insights. Generate a pdf report',
+            'ai_prompt' : 'Analyse the data and provide insights and resources like links to learn more or address the issues. Generate a detailed report to include findings, actions and reccommendations',
             'ai_model':os.getenv('AI_MODEL',None),
             'ai_context' : os.getenv('AI_CONTEXT',''),
             }
@@ -99,9 +100,13 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
             logs = Logs(**base_config)
             logs.fetch_logs() 
 
-            # AI
+            # Gemini AI
             ai = AI(**base_config)
             ai.generateAIresponse()
+
+            #Deep Seek
+            deepseek = DeepSeek(**base_config)
+            deepseek.generateReport()
 
             if verbose:
                 print('\t Sleeping for {} seconds...'.format(sleep_time))

@@ -80,9 +80,7 @@ class Logs(Base):
         ❗ Exception: {log_data['exception_code']} - {log_data['exception_message']}
         📝 Log Message: {log_data['message']}
         """
-        if self.VERBOSE:
-            print(alert_message)
-            
+        
         self.brief_notify(alert_message)
         return
     

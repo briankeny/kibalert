@@ -1,7 +1,6 @@
 # Kibalert
 Kibalert is an anomaly monitoring and notification script for Elastic Stack users, especially those using Kibana for visualization. It monitors Elasticsearch data for anomalies, enables custom alerting rules, and sends notifications via email or Slack.
 
-
 ## Prerequisites
 - Python 3.x
 - Required dependencies installed (see installation section)
@@ -42,7 +41,10 @@ Kibalert is an anomaly monitoring and notification script for Elastic Stack user
    pip install -r requirements.txt
    ```
 
-3. Create a `.env` file and add the following variables (Check `.env.example` for reference):
+3. Create a `.env` file and add the following variables 
+
+   Please Check `.env.example` for full reference:
+   
    ```bash
    KIBANA_URL=<your-kibana-url>
    KIBANA_API_KEY=<your-kibana-api-key>
@@ -67,9 +69,17 @@ python main.py -m <receiver_email> [-u <kibana_url>] [-i <rule_id>] [-s <service
 | `-s`, `--service`  | Rule ID for service query  | `.env` value or `''` |
 | `-m`, `--mail`  | Receiver's email address  | `.env` value or `''` |
 | `-ns`, `--notifyslack`  | Notify Slack Channel  | `.env` value or `''` |
+| `-st`, `--slacktoken`  | Slack token for API  | `.env` value or `''` |
 | `-t`, `--time`  | Sleep interval between checks (seconds)  | `.env` value or `300` |
 | `-f`, `--file`  | Log file to save output  | `anomaly.log` |
 | `-v`, `--verbose`  | Enable verbose mode  | `.env` value or `True` |
+| `-w`, `--webhook`  | Slack webhook URL  | `.env` value or `''` |
+| `--smtp_server`  | SMTP server address  | `.env` value or `''` |
+| `--smtp_port`  | SMTP port number  | `.env` value or `587` |
+| `--smtp_user`  | SMTP username  | `.env` value or `''` |
+| `--smtp_password`  | SMTP password  | `.env` value or `''` |
+| `--userlog`  | User activity log file  | `user_activity.log` |
+| `--hits_size`  | Hits size per query  | `100` |
 
 #### Example Usage
 ```bash
@@ -95,7 +105,6 @@ docker stop kibalert
 ```
 
 ### 3. Run as an Executable Script
-
 Ensure all your environment variables are properly configured
 
 ```bash
