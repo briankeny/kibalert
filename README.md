@@ -58,7 +58,7 @@ Kibalert is an anomaly monitoring and notification script for Elastic Stack user
 ### 1. Run with Command-Line Arguments
 Run the script with the required arguments:
 ```bash
-python main.py -m <receiver_email> [-u <kibana_url>] [-i <rule_id>] [-s <service_id>] [-t <interval>] [-f <log_file>] [-v]
+python main.py -m <receiver_email> [-u <kibana_url>] [-i <rule_id>] [-s <SERVICE_RULE_IDS>] [-t <interval>] [-f <log_file>] [-v]
 ```
 
 #### Command-Line Arguments

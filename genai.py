@@ -15,8 +15,7 @@ class GeminiAI(Base):
 
     def generateAIresponse(self):
         if not self.MODEL_NAME :
-            if self.VERBOSE:
-                self.log_message('[+] No AI model selected')
+            self.log_message('[+] No AI model selected')
             return
         self.log_message('[-] AI response generation started...')   
         content = []
@@ -40,10 +39,10 @@ class GeminiAI(Base):
                 response = model.generate_content(content, stream=True)
                 response.resolve()
                 report_name = f"report{uuid.uuid4()}.md"
+                self.GENERATED_FILES.append(report_name)
                 with open(report_name, "w", encoding="utf-8") as f:
                     f.write(response.text)
-                    if self.VERBOSE:
-                        self.log_message('AI response report has been saved to ' + report_name)
+                    self.log_message('AI response report has been saved to ' + report_name)
                 self.full_notify(subject='AI Analysis',message=report_name,file_path=report_name)
                 self.log_message('[+] AI response generation complete ...')
                 return response
@@ -53,5 +52,3 @@ class GeminiAI(Base):
         except Exception as e:
             self.log_message(f'[-] AI response generation failed: {e}')
             return
-
-

@@ -2,7 +2,6 @@ import uuid
 import requests
 from base import Base
 
-
 class DeepSeek(Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -37,12 +36,11 @@ class DeepSeek(Base):
         Generates a report using the DeepSeek model.
         """
         if not self.DEEPSEEK_API_MODEL or not self.DEEPSEEK_API_KEY:
-            if self.VERBOSE:
-                self.log_message('[+] DeepSeek AI model selected')
+            self.log_message('[+] DeepSeek AI model selected')
             return
         
-        if self.VERBOSE:
-            self.log_message('[-] DeepSeekAI generation started...')
+        
+        self.log_message('[-] DeepSeekAI generation started...')
         content = []
 
         # Append AI prompt
@@ -56,11 +54,9 @@ class DeepSeek(Base):
                     file_content = f.read()
                     content.append(file_content)
             except FileNotFoundError:
-                if self.VERBOSE:
-                    self.log_message(f"File not found: {file_path}")
+                self.log_message(f"File not found: {file_path}")
             except Exception as e:
-                if self.VERBOSE:
-                    self.log_message(f"Error reading file {file_path}: {e}")
+                self.log_message(f"Error reading file {file_path}: {e}")
 
         if len(content) > 0:
             try:
@@ -77,28 +73,23 @@ class DeepSeek(Base):
                     # Extract the generated text from the response
                     generated_text = response.get("choices", [{}])[0].get("message", {}).get("content", "")
                     report_name = f"report{uuid.uuid4()}.md"
-
+                    self.GENERATED_FILES.append(report_name)
                     # Save the report
                     with open(report_name, "w", encoding="utf-8") as f:
                         f.write(generated_text)
-                        if self.VERBOSE:
-                            self.log_message('DeepSeekAI report has been saved to ' + report_name)
+                        self.log_message('DeepSeekAI report has been saved to ' + report_name)
 
                     # Notify about the report
                     self.full_notify(subject='AI Analysis', message=report_name, file_path=report_name)
                     
-                    if self.VERBOSE:
-                        self.log_message('[+] DeepSeekAI generation complete ...')
+                    self.log_message('[+] DeepSeekAI generation complete ...')
                     return generated_text
                 else:
-                    if self.VERBOSE:
-                        self.log_message('[+] No response received from DeepSeek API')
+                    self.log_message('[+] No response received from DeepSeek API')
                     return None
             except Exception as e:
-                if self.VERBOSE:
-                    self.log_message(f'[-] DeepSeekAI generation failed: {e}')
+                self.log_message(f'[-] DeepSeekAI generation failed: {e}')
                 return None
         else:
-            if self.VERBOSE:
-                self.log_message('[+] Skipping, no content found...')
+            self.log_message('[+] Skipping, no content found...')
             return None

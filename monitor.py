@@ -78,9 +78,8 @@ class Monitor(Base):
             self.full_notify(subject=subject, message=body)
             self.send_mail(subject=subject, body=body)
 
-        if self.VERBOSE:
-            for entity in downtime_list:
-                self.log_message(f"{entity.get('timestamp', 'N/A')} - {entity.get('name', 'Unknown')} is DOWN.")
+        for entity in downtime_list:
+            self.log_message(f"{entity.get('timestamp', 'N/A')} - {entity.get('name', 'Unknown')} is DOWN.")
 
         self.log_message(f"[+] Fetching {entity_type} Downtime complete... {count} \n")
 

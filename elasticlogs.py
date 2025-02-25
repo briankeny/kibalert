@@ -1,7 +1,7 @@
 import requests
 from base import Base
 
-class Logs(Base):
+class  ElasticLogs(Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -58,8 +58,7 @@ class Logs(Base):
             if count < self.NOTIFY_LIMIT and extracted_log["message"]:
                 self.alert_log_issue(extracted_log)
     
-            if self.VERBOSE:         
-                self.log_message(f"{extracted_log['timestamp']} - {extracted_log['service_name']} - {extracted_log['culprit']} - {extracted_log['exception_code']} - {extracted_log['exception_message']}")
+            self.log_message(f"{extracted_log['timestamp']} - {extracted_log['service_name']} - {extracted_log['culprit']} - {extracted_log['exception_code']} - {extracted_log['exception_message']}")
 
             count += 1
 
@@ -91,8 +90,8 @@ class Logs(Base):
             self.log_message("No logs found for further analysis.")
             return
        
-        if self.VERBOSE:
-            self.log_message(f"Saving {len(logs)} logs for further analysis.")
+        
+        self.log_message(f"Saving {len(logs)} logs for further analysis.")
     
         if self.USER_LOG_FILE:
             subject = "📌 Logs Collected for further Analysis"

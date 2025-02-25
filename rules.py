@@ -98,20 +98,22 @@ Features: {alert['features']}
     
     def fetch_host_alerts(self):
         """Fetch and process alerts for host CPU usage."""
-        if not self.ANOMALY_RULE_ID:
-            self.log_message('[-] ANOMALY_RULE_ID not found. Skipping rule alerts.')
+        if not self.HOSTS_RULE_IDS:
+            self.log_message('[-] HOSTS_RULE_IDS not found. Skipping rule alerts.')
             return
-        self.log_message(f'[-]  Fetching alerts for HOST CPU Usage from rule {self.ANOMALY_RULE_ID} started...')
-        alerts = self._fetch_alerts(self.ANOMALY_RULE_ID)
-        processed_alerts = self._process_alerts(alerts, is_host_alert=True)
-        self._send_notifications(processed_alerts, is_host_alert=True)
+        for host_rule in self.HOSTS_RULE_IDS:
+            self.log_message(f'[-]  Fetching alerts for HOST CPU Usage from rule {host_rule} started...')
+            alerts = self._fetch_alerts(host_rule)
+            processed_alerts = self._process_alerts(alerts, is_host_alert=True)
+            self._send_notifications(processed_alerts, is_host_alert=True)
     
     def fetch_service_alerts(self):
         """Fetch and process alerts for service latency."""
-        if not self.SERVICE_ID:
-            self.log_message('[-] SERVICE_ID not found. Skipping rule alerts.')
+        if not self.SERVICE_RULE_IDS:
+            self.log_message('[-] SERVICE_RULE_IDS not found. Skipping rule alerts.')
             return
-        self.log_message(f'[-]  Fetching alerts for Latencies Exceeded alerts from rule {self.SERVICE_ID} started...')
-        alerts = self._fetch_alerts(self.SERVICE_ID)
-        processed_alerts = self._process_alerts(alerts, is_host_alert=False)
-        self._send_notifications(processed_alerts, is_host_alert=False)
+        for service_rule in self.SERVICE_RULE_IDS:
+            self.log_message(f'[-]  Fetching alerts for Latencies Exceeded alerts from rule {service_rule} started...')
+            alerts = self._fetch_alerts(service_rule)
+            processed_alerts = self._process_alerts(alerts, is_host_alert=False)
+            self._send_notifications(processed_alerts, is_host_alert=False)

@@ -4,3 +4,4 @@ log*
 *.log
 report*
 *.md
+*.json

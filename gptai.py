@@ -9,8 +9,7 @@ class GptAI(Base):
 
     def promptGPT(self):
         if not self.GPT_API_KEY:
-            if self.VERBOSE:
-                self.log_message('[+] No OpenAI API key provided')
+            self.log_message('[+] No OpenAI API key provided')
             return
         
         client = OpenAI(api_key=self.GPT_API_KEY)  
@@ -49,12 +48,11 @@ class GptAI(Base):
             
             report_text = response.choices[0].message.content
             report_name = f"report_{uuid.uuid4()}.md"
+            self.GENERATED_FILES.append(report_name)
             with open(report_name, "w", encoding="utf-8") as f:
                 f.write(report_text)
             
-            if self.VERBOSE:
-                self.log_message(f'[+] OpenAI report saved to {report_name}')
-            
+            self.log_message(f'[+] OpenAI report saved to {report_name}')
             self.full_notify(subject='AI Analysis', message=report_name, file_path=report_name)
             self.log_message('[+] OpenAI generation complete ...')
 

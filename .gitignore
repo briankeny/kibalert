@@ -119,3 +119,4 @@ venv.bak/
 
 # Custom files/directories (add your own here)
 report*
+*.json
