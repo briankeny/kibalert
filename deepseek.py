@@ -16,7 +16,7 @@ class DeepSeek(Base):
         }
         payload = {
             "model": model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [ {"role":"system","content":self.AI_CONTEXT}, {"role": "user", "content": prompt}],
             "temperature": temperature,
             "top_p": top_p,
             "frequency_penalty": frequency_penalty,
@@ -36,7 +36,7 @@ class DeepSeek(Base):
         Generates a report using the DeepSeek model.
         """
         if not self.DEEPSEEK_API_MODEL or not self.DEEPSEEK_API_KEY:
-            self.log_message('[+] DeepSeek AI model selected')
+            self.log_message('[+] DeepSeek API key or model is not configured. Skipping...') 
             return
         
         

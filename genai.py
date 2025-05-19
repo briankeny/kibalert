@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+content = []
+
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
 
@@ -14,10 +16,10 @@ class GeminiAI(Base):
         super().__init__(**kwargs)
 
     def generateAIresponse(self):
-        if not self.MODEL_NAME :
+        if not self.MODEL_NAME:
             self.log_message('[+] No AI model selected')
             return
-        self.log_message('[-] AI response generation started...')   
+        self.log_message('[-] Gemini AI response generation started...')   
         content = []
 
         if self.AI_PROMPT:
@@ -30,9 +32,9 @@ class GeminiAI(Base):
                     file_content = f.read()
                     content.append(file_content)
             except FileNotFoundError:
-                print(f"File not found: {file_path}")
+                self.log_message(f"File not found: {file_path}")
             except Exception as e:
-                print(f"Error reading file {file_path}: {e}")
+                self.log_message(f"Error reading file {file_path}: {e}")
         try:
             if len(content) > 0:
                 model = genai.GenerativeModel(self.MODEL_NAME, system_instruction=self.AI_CONTEXT, safety_settings=None)

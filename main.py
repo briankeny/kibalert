@@ -134,8 +134,10 @@ def main(url, api_key, slack_token, webhook_url, smtp_server, smtp_port, smtp_us
             logs = ElasticLogs(**base_config)
             logs.fetch_logs() 
                       
-            
+            # Run AI Based on Schedule
+            print(base.run_ai_now())
             if base.run_ai_now():
+            
                 # Gemini AI
                 ai = GeminiAI(**base_config)
                 ai.generateAIresponse()

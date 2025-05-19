@@ -73,7 +73,7 @@ class Monitor(Base):
 
         if self.USER_LOG_FILE:
             subject = f"⚠️ Downtime Alert: {count} {entity_type.capitalize()}(s) Are Down"
-            body = "Check attached log file\n"
+            body = "Check attached log file"
             self.write_to_log_file(downtime_list,subject)
             self.full_notify(subject=subject, message=body)
             self.send_mail(subject=subject, body=body)
@@ -81,7 +81,7 @@ class Monitor(Base):
         for entity in downtime_list:
             self.log_message(f"{entity.get('timestamp', 'N/A')} - {entity.get('name', 'Unknown')} is DOWN.")
 
-        self.log_message(f"[+] Fetching {entity_type} Downtime complete... {count} \n")
+        self.log_message(f"[+] Fetching {entity_type} Downtime complete... {count}")
 
     def check_host_downtime(self):
         """Identify hosts that have stopped sending data."""
@@ -110,7 +110,7 @@ class Monitor(Base):
             "query": {
                 "bool": {
                     "must": [
-                        {"range": {"@timestamp": {"gte": f"now-{self.SLEEP_TIME}m", "lt": "now"}}},
+                        {"range": {"@timestamp": {"gte": f"now-{self.SLEEP_TIME}s", "lt": "now"}}},
                         {"match": {"monitor.status": "down"}}
                     ]
                 }

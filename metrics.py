@@ -32,7 +32,7 @@ class Metrics(Base):
             self.full_notify(subject=log_subject, message=log_body)
 
         self.log_message(f"Affected {item_type.capitalize()}s: {len(affected_items)}")
-        self.log_message(f"[+] Fetching {item_type.capitalize()} Data complete...\n\n")
+        self.log_message(f"[+] Fetching {item_type.capitalize()} Data complete...")
 
     def generate_notification_message(self, item, item_type, threshold):
         """Generate a notification message based on the item type."""
@@ -86,7 +86,7 @@ Disk Usage: {item.get('disk_usage','unknown')}%
 
     def fetch_latency_data(self):
         """Fetch latency data from Elasticsearch."""
-        self.log_message("\n[+] Started Fetching Latency Data From Elastic...")
+        self.log_message("[+] Started Fetching Latency Data From Elastic...")
         query = {
             "size": self.HITS_SIZE,
             "_source": [
@@ -110,12 +110,19 @@ Disk Usage: {item.get('disk_usage','unknown')}%
         """Process latency data and identify affected hosts."""
         hits = data.get("hits", {}).get("hits", [])
         self.log_message(f"Found [{len(hits)}] services. Checking {self.LATENCY_THRESHOLD} ms threshold...")
-
         affected_hosts = []
+        found_hosts = set()
         for hit in hits:
             source = hit.get("_source", {})
+            # Get the Url
+            url = source.get("url", {}).get("full", "unknown")
+            # Skip if the URL is already processed
+            if url in found_hosts:
+                continue  
+            # Add the URL to the set
+            found_hosts.add(url)  
             latency_dict = {
-                "url": source.get("url", {}).get("full", "unknown"),
+                "url": url,
                 "tcp": source.get("tcp", {}).get("rtt", {}).get("connect", {}).get("us", 0) / 1000,
                 "tls": source.get("tls", {}).get("rtt", {}).get("handshake", {}).get("us", 0) / 1000,
                 "http": source.get("http", {}).get("rtt", {}).get("total", {}).get("us", 0) / 1000,
@@ -132,7 +139,7 @@ Disk Usage: {item.get('disk_usage','unknown')}%
 
     def fetch_cpu_data(self):
         """Fetch CPU usage data from Elasticsearch."""
-        self.log_message("\n[-] Started fetching CPU Usage Data From Elastic...")
+        self.log_message("[-] Started fetching CPU Usage Data From Elastic...")
         query = {
             "query": {
                 "bool": {
